@@ -468,18 +468,118 @@ class Enemy {
 
     ctx.restore();
   }
+class Rock {
+  constructor(x, y, angle) {
+    this.x = x;
+    this.y = y;
+    this.angle = angle;
+    this.speed = 5;
+    this.radius = 12;
+    this.dead = false;
+  }
 
-  // Spawning enemies - 20% chance de que sea especial
-  function spawnEnemy() {
-    const chance = Math.random();
-    if (chance < 0.1) {
-      enemies.push(new JumpingEnemy());
-    } else if (chance < 0.2) {
-      enemies.push(new TongueEnemy());
-    } else {
-      enemies.push(new Enemy());
+  update() {
+    this.x += Math.cos(this.angle) * this.speed;
+    this.y += Math.sin(this.angle) * this.speed;
+
+    // Fuera del canvas
+    if (
+      this.x < -this.radius || this.x > canvas.width + this.radius ||
+      this.y < -this.radius || this.y > canvas.height + this.radius
+    ) {
+      this.dead = true;
+      return;
+    }
+
+    // Colisión con jugador
+    if (dist(this.x, this.y, player.x, player.y) < this.radius + player.size / 2) {
+      player.health -= 20;
+      this.dead = true;
+      if (player.health <= 0) {
+        player.isAlive = false;
+        gameOver = true;
+        clearInterval(firingInterval);
+        restartBtn.style.display = 'block';
+      }
     }
   }
+
+  draw() {
+    ctx.fillStyle = 'saddlebrown';
+    ctx.beginPath();
+    ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+    ctx.fill();
+  }
+}
+
+// Enemigo gigante que lanza rocas
+class RockThrowerEnemy extends Enemy {
+  constructor() {
+    super();
+    this.type = 'rockthrower';
+    this.size = 60;
+    this.speed = 0.5;
+    this.health = 500; // 5 veces más resistente
+    this.rockCooldown = 0;
+    this.rockRate = 120; // lanza cada 2 segundos (~60fps)
+  }
+
+  update() {
+    if (this.isDead) return;
+
+    let angle = Math.atan2(player.y - this.y, player.x - this.x);
+    this.x += Math.cos(angle) * this.speed;
+    this.y += Math.sin(angle) * this.speed;
+
+    if (this.rockCooldown <= 0) {
+      rocks.push(new Rock(this.x, this.y, angle));
+      this.rockCooldown = this.rockRate;
+    } else {
+      this.rockCooldown--;
+    }
+
+    if (dist(this.x, this.y, player.x, player.y) < (this.size + player.size) / 2) {
+      player.health -= 5;
+      if (player.health <= 0) {
+        player.isAlive = false;
+        gameOver = true;
+        clearInterval(firingInterval);
+        restartBtn.style.display = 'block';
+      }
+    }
+  }
+
+  draw() {
+    if (this.isDead) return;
+
+    ctx.fillStyle = 'purple';
+    ctx.beginPath();
+    ctx.arc(this.x, this.y, this.size / 2, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = 'red';
+    ctx.beginPath();
+    ctx.arc(this.x - 12, this.y - 10, 6, 0, Math.PI * 2);
+    ctx.arc(this.x + 12, this.y - 10, 6, 0, Math.PI * 2);
+    ctx.fill();
+  }
+}
+let rocks = [];
+
+  // Spawning enemies - 20% chance de que sea especial
+function spawnEnemy() {
+  const chance = Math.random();
+  if (chance < 0.1) {
+    enemies.push(new JumpingEnemy());
+  } else if (chance < 0.2) {
+    enemies.push(new TongueEnemy());
+  } else if (chance < 0.25) {
+    enemies.push(new RockThrowerEnemy()); // 5% de chance
+  } else {
+    enemies.push(new Enemy());
+  }
+}
+
 
   // Update game state
   function update() {
@@ -514,7 +614,9 @@ class Enemy {
     // Actualizar granadas
     for (let grenade of grenades) grenade.update();
     grenades = grenades.filter(g => !g.dead);
-
+    
+    for (let rock of rocks) rock.update();
+    rocks = rocks.filter(r => !r.dead);
     draw();
     if (!gameOver) requestAnimationFrame(update);
   }
@@ -534,6 +636,7 @@ class Enemy {
 
     // Granadas
     for (let grenade of grenades) grenade.draw();
+    for (let rock of rocks) rock.draw();
 
     // HUD
     ctx.fillStyle = 'white';
@@ -672,4 +775,3 @@ ctx.strokeRect(x, y, barWidth, barHeight);
 </script>
 </body>
 </html>
-
