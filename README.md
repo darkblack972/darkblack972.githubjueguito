@@ -43,8 +43,8 @@
 <body>
 <button id="restartBtn">Reiniciar Juego</button>
 <div id="info">
-  <div>Q: Cambiar arma (Metralleta / Sniper)</div>
-  <div>W: Elegir Granada</div>
+  <div>1: Cambiar arma (Metralleta / Sniper)</div>
+  <div>2: Elegir Granada</div>
   <div>Click Mantener: Disparar / Lanzar granada</div>
   <div>Flechas: Mover jugador</div>
 </div>
@@ -716,13 +716,13 @@ ctx.strokeRect(x, y, barWidth, barHeight);
   window.addEventListener('keydown', e => {
     keys[e.key] = true;
 
-    if (e.key.toLowerCase() === 'q') {
+    if (e.key.toLowerCase() === '1') {
       // Cambiar entre metralleta y sniper
       if (currentWeapon === 'machinegun') currentWeapon = 'sniper';
       else if (currentWeapon === 'sniper') currentWeapon = 'machinegun';
       else if (currentWeapon === 'grenade') currentWeapon = 'machinegun';
     }
-    if (e.key.toLowerCase() === 'w') {
+    if (e.key.toLowerCase() === '2') {
       // Cambiar a granada o volver a metralleta
       if (currentWeapon !== 'grenade') currentWeapon = 'grenade';
       else currentWeapon = 'machinegun';
