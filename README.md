@@ -1,127 +1,54 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Shooter Zombies Multijugador</title>
-  <style>
-    body, html {
-      margin: 0;
-      padding: 0;
-      background: #111;
-      color: white;
-      font-family: monospace;
-    }
-    #menuContainer {
-      text-align: center;
-      padding-top: 100px;
-    }
-    #connectionMenu, #gameCanvas {
-      display: none;
-    }
-    input, button {
-      font-size: 16px;
-      padding: 10px 15px;
-      margin: 8px;
-      border: none;
-      border-radius: 5px;
-    }
-    button {
-      cursor: pointer;
-      background-color: crimson;
-      color: white;
-    }
-    input {
-      background-color: #222;
-      color: white;
-      width: 250px;
-    }
-  </style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Shooter Zombies</title>
+<style>
+  body, html {
+    margin: 0; padding: 0; overflow: hidden; background: #222;
+    user-select: none;
+  }
+  canvas {
+    display: block;
+    background: #111;
+    margin: 0 auto;
+    border: 2px solid #555;
+  }
+  #restartBtn {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 24px;
+    padding: 15px 30px;
+    background: crimson;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    display: none;
+    z-index: 10;
+  }
+  #info {
+    position: fixed;
+    top: 5px;
+    left: 5px;
+    color: white;
+    font-family: monospace;
+    font-size: 14px;
+  }
+</style>
 </head>
 <body>
-
-  <!-- Menú inicial -->
-  <div id="menuContainer">
-    <h1>Shooter Zombies</h1>
-    <button onclick="createGame()">Crear Partida</button><br><br>
-
-    <div id="connectionMenu">
-      <input type="text" id="ipInput" placeholder="ws://192.168.x.x:3000" value="ws://localhost:3000" />
-      <br>
-      <button onclick="joinGame()">Unirse a Partida</button>
-    </div>
-
-    <br>
-    <button onclick="showJoinMenu()">Unirse a Partida</button>
-  </div>
-
-  <!-- Canvas del juego -->
-  <canvas id="gameCanvas" width="800" height="600"></canvas>
-
-  <script>
-    let socket;
-    let playerId = null;
-
-    function showJoinMenu() {
-      document.getElementById('connectionMenu').style.display = 'block';
-    }
-
-    function createGame() {
-      connectToServer('ws://localhost:3000'); // IP del host (tú)
-    }
-
-    function joinGame() {
-      const ip = document.getElementById('ipInput').value;
-      connectToServer(ip);
-    }
-
-    function connectToServer(ip) {
-      socket = new WebSocket(ip);
-
-      socket.addEventListener('open', () => {
-        console.log('Conectado al servidor:', ip);
-        startGame();
-      });
-
-      socket.addEventListener('message', (event) => {
-        const data = JSON.parse(event.data);
-
-        if (data.type === 'welcome') {
-          playerId = data.id;
-          console.log('Tu ID de jugador:', playerId);
-        }
-
-        // Aquí puedes manejar más tipos de mensajes (posiciones, disparos, etc.)
-      });
-
-      socket.addEventListener('close', () => {
-        alert('Conexión cerrada por el servidor.');
-      });
-
-      socket.addEventListener('error', (err) => {
-        alert('Error al conectar con el servidor.');
-        console.error(err);
-      });
-    }
-
-    function startGame() {
-      document.getElementById('menuContainer').style.display = 'none';
-      document.getElementById('gameCanvas').style.display = 'block';
-
-      // Llama a tu juego original
-      startShooterGame(); // Esta función debe existir en shooter.js
-    }
-
-    // Para enviar eventos a otros jugadores
-    function sendToOthers(data) {
-      if (socket && socket.readyState === WebSocket.OPEN) {
-        socket.send(JSON.stringify(data));
-      }
-    }
-  </script>
-
-  <!-- Aquí importas tu juego original -->
-  <script src="shooter.js"></script>
+<button id="restartBtn">Reiniciar Juego</button>
+<div id="info">
+  <div>Q: Cambiar arma (Metralleta / Sniper)</div>
+  <div>W: Elegir Granada</div>
+  <div>Click Mantener: Disparar / Lanzar granada</div>
+  <div>Flechas: Mover jugador</div>
+</div>
+<canvas id="gameCanvas" width="800" height="600"></canvas>
 
 <script>
 (() => {
